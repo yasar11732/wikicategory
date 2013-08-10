@@ -22,7 +22,7 @@ If you want to write those pages into seperate files, you can do so;
 
     wk.saveToFiles(".txt");
     
-Files will be written to a directory name wiki in current working directory with file extension ".txt". You can also specify where to write them
+Files will be written to a directory named wiki in current working directory with file extension ".txt". You can also specify where to write them
 
     wk.saveToFiles(new File("path to directory"), ".txt");
     
