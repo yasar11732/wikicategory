@@ -4,7 +4,7 @@ wikicategory
 Gets all articles from a wikipedia category in wikitext format
 
 This class can be used to get all articles from specified category
-from a mediawiki powered site in a mediatext format and allows you
+from a [mediawiki](http://www.mediawiki.org/wiki/MediaWiki) powered site in a mediatext format and allows you
 to save articles in text files. This class is hopefully usefull for
 data-mining on mediawiki powered sites.
 
