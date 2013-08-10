@@ -193,7 +193,11 @@ public class WikiCategory {
 
         return sb.toString();
     }
-
+    
+    /**
+     * call this method to fetch data from mediawiki api
+     * @return a JSONObject that contains pages returned from api call
+     */
     public JSONObject run() {
         if (this.endPoint == null || this.category == null) {
             System.err.println("endpoint or category is not set");
