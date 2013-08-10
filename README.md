@@ -3,8 +3,10 @@ wikicategory
 
 Gets all articles from a wikipedia category in wikitext format
 
-This class can be used to get all articles from a wikipedia category and
-write those files to disk in wikitext format.
+This class can be used to get all articles from specified category
+from a mediawiki powered site in a mediatext format and allows you
+to save articles in text files. This class is hopefully usefull for
+data-mining on mediawiki powered sites.
 
 Usage:
 
