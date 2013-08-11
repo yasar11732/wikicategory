@@ -13,11 +13,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.simple.JSONArray;
@@ -40,7 +41,7 @@ public class WikiCategory {
     private String endPoint;
     private String category;
     private JSONObject pages;
-    private HashMap<String, String> params;
+    private Map<String, String> params;
 
     /**
      * @param name Your name
@@ -53,7 +54,7 @@ public class WikiCategory {
     public WikiCategory(String name, String eMail, String endPoint, String category) {
         this(name, eMail, endPoint);
         this.category = category;
-        this.params.put("gcmtitle", this.category);
+        params.put("gcmtitle", this.category);
     }
 
     /**
@@ -61,14 +62,14 @@ public class WikiCategory {
      * {@link #WikiCategory(String, String, String, String) WikiCategory}
      */
     public WikiCategory(String name, String eMail) {
-        this.params = new HashMap<>();
-        this.params.put("generator", "categorymembers");
-        this.params.put("gcmtype", "page");
-        this.params.put("prop", "revisions");
-        this.params.put("rvprop", "content");
+        params = new HashMap<>();
+        params.put("generator", "categorymembers");
+        params.put("gcmtype", "page");
+        params.put("prop", "revisions");
+        params.put("rvprop", "content");
         // params.put("rvparse","1"); // to get html output
 
-        this.userAgent = String.format("%s -- Java %s, %s %s", EXPLANATION, System.getProperty("java.version"), name, eMail);
+        userAgent = String.format("%s -- Java %s, %s %s", EXPLANATION, System.getProperty("java.version"), name, eMail);
     }
 
     /**
@@ -96,7 +97,7 @@ public class WikiCategory {
         this.category = category;
     }
 
-    /* DEBUGGINGG PURPOSES ONLY 
+    /* DEBUGGINGG PURPOSES ONLY  */
      public static void main(String[] args) {
      WikiCategory wk = new WikiCategory("Yaşar Arabacı", "yasar11732@gmail.com",
      "http://en.wikipedia.org/w/api.php", "Category:Psychology");
@@ -139,11 +140,17 @@ public class WikiCategory {
             return;
         }
 
-        for (Iterator it = this.pages.keySet().iterator(); it.hasNext();) {
-            String key = (String) it.next();
-            JSONObject current = (JSONObject) this.pages.get(key);
-            File destFile = new File(targetDir, URLEncoder.encode(current.get("title").toString() + fileSuffix));
-            System.out.println("File will be" + destFile);
+        for (Object k : pages.keySet()) {
+            String key = k.toString();
+            JSONObject current = (JSONObject) pages.get(key);
+            File destFile;
+            try {
+                destFile = new File(targetDir, URLEncoder.encode(current.get("title").toString() + fileSuffix, "UTF8"));
+                System.out.println("File will be" + destFile);
+            } catch (UnsupportedEncodingException e) {
+                return;
+            }
+            
             JSONArray revisions = (JSONArray) current.get("revisions");
             JSONObject firstRev = (JSONObject) revisions.get(0);
             try {
@@ -155,8 +162,7 @@ public class WikiCategory {
                 Logger.getLogger(WikiCategory.class.getName()).log(Level.SEVERE, null, ex);
                 return;
             }
-            try {
-                PrintWriter writer = new PrintWriter(destFile, "UTF-8");
+            try (PrintWriter writer = new PrintWriter(destFile, "UTF-8")) {
                 writer.print((String) firstRev.get("*"));
                 writer.close();
             } catch (FileNotFoundException ex) {
@@ -164,27 +170,29 @@ public class WikiCategory {
             } catch (IOException ex) {
                 Logger.getLogger(WikiCategory.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-
-
         }
     }
 
-    private HashMap<String, String> getParams() {
-        return this.params;
+    private Map<String, String> getParams() {
+        return params;
     }
 
     public String getUserAgent() {
-        return this.userAgent;
+        return userAgent;
     }
 
-    private static String makeQueryString(HashMap<String, String> args) {
+    private static String makeQueryString(Map<String, String> args) {
         StringBuilder sb = new StringBuilder();
         for (String key : args.keySet()) {
-            sb.append(URLEncoder.encode(key));
+            try {
+            sb.append(URLEncoder.encode(key,"UTF8"));
             sb.append("=");
-            sb.append(URLEncoder.encode(args.get(key)));
+            sb.append(URLEncoder.encode(args.get(key),"UTF8"));
             sb.append("&");
+            } catch (UnsupportedEncodingException e) {
+                System.err.println(e.getMessage());
+                return null;
+            }
         }
         /* there is an extra "&" at the end*/
         if (sb.length() > 1) {
@@ -203,7 +211,7 @@ public class WikiCategory {
             System.err.println("endpoint or category is not set");
             return null;
         }
-        JSONObject query = get("query", this.getParams());
+        JSONObject query = get("query", params);
         JSONObject currentPages = (JSONObject) ((JSONObject) query.get("query")).get("pages");
 
         while (query.get("query-continue") != null) {
@@ -215,11 +223,11 @@ public class WikiCategory {
             query = get("query", nparams);
             currentPages.putAll((JSONObject) ((JSONObject) query.get("query")).get("pages"));
         }
-        this.pages = currentPages;
-        return this.pages;
+        pages = currentPages;
+        return pages;
     }
 
-    private JSONObject get(String action, HashMap<String, String> queryArgs) {
+    private JSONObject get(String action, Map<String, String> queryArgs) {
 
         queryArgs.put("action", action);
         queryArgs.put("format", "json");
@@ -227,14 +235,14 @@ public class WikiCategory {
         String queryString = makeQueryString(queryArgs);
         String url = String.format("%s?%s", this.endPoint, queryString);
         System.out.println(url);
-
+        HttpURLConnection con = null;
         try {
             URL urlObj = new URL(url);
             JSONParser parser = new JSONParser();
 
-            HttpURLConnection con = (HttpURLConnection) urlObj.openConnection();
+            con = (HttpURLConnection) urlObj.openConnection();
             con.setRequestMethod("GET");
-            con.setRequestProperty("User-Agent", this.userAgent);
+            con.setRequestProperty("User-Agent", userAgent);
             Object obj = parser.parse(new BufferedReader(new InputStreamReader(con.getInputStream(), "UTF8")));
             JSONObject jsonObject = (JSONObject) obj;
             if (jsonObject.get("error") != null) {
@@ -250,6 +258,11 @@ public class WikiCategory {
         } catch (ParseException pe) {
             System.err.println("Couldn't parse returned data as json:" + pe.getPosition());
             return null;
+        } finally {
+            if (con != null) {
+                con.disconnect();
+            }
+            
         }
 
     }
