@@ -2,6 +2,7 @@
  * WikiCategory
  *
  * There is no copyright, do whatever you want with this.
+ *
  * @author Yaşar Arabacı
  * @date 10.08.2013
  */
@@ -98,15 +99,17 @@ public class WikiCategory {
     }
 
     /* DEBUGGINGG PURPOSES ONLY  */
-     public static void main(String[] args) {
-     WikiCategory wk = new WikiCategory("Yaşar Arabacı", "yasar11732@gmail.com",
-     "http://en.wikipedia.org/w/api.php", "Category:Psychology");
-     wk.run();
-     wk.saveToFiles(".txt");
+    public static void main(String[] args) {
+        WikiCategory wk = new WikiCategory("Yaşar Arabacı", "yasar11732@gmail.com",
+                "http://en.wikipedia.org/w/api.php", "Category:Psychology");
+        wk.run();
+        wk.saveToFiles(".txt");
 
-     // System.out.println("function returned: " + pages);
+        // System.out.println("function returned: " + pages);
 
-     } /**/
+    } /**/
+
+
     /**
      * calls {@link #saveToFiles(File, String) saveToFiles} with targetDir set
      * to current directory and suffix set to "".
@@ -150,7 +153,7 @@ public class WikiCategory {
             } catch (UnsupportedEncodingException e) {
                 return;
             }
-            
+
             JSONArray revisions = (JSONArray) current.get("revisions");
             JSONObject firstRev = (JSONObject) revisions.get(0);
             try {
@@ -185,12 +188,12 @@ public class WikiCategory {
         StringBuilder sb = new StringBuilder();
         for (String key : args.keySet()) {
             try {
-            sb.append(URLEncoder.encode(key,"UTF8"));
-            sb.append("=");
-            sb.append(URLEncoder.encode(args.get(key),"UTF8"));
-            sb.append("&");
+                sb.append(URLEncoder.encode(key, "UTF8"));
+                sb.append("=");
+                sb.append(URLEncoder.encode(args.get(key), "UTF8"));
+                sb.append("&");
             } catch (UnsupportedEncodingException e) {
-                System.err.println(e.getMessage());
+                Logger.getLogger(WikiCategory.class.getName()).log(Level.SEVERE, null, e);
                 return null;
             }
         }
@@ -201,9 +204,10 @@ public class WikiCategory {
 
         return sb.toString();
     }
-    
+
     /**
      * call this method to fetch data from mediawiki api
+     *
      * @return a JSONObject that contains pages returned from api call
      */
     public JSONObject run() {
@@ -253,16 +257,16 @@ public class WikiCategory {
             }
 
         } catch (IOException e) {
-            System.err.println("Couldn't establish http connection" + e.getMessage());
+            Logger.getLogger(WikiCategory.class.getName()).log(Level.SEVERE, null, e);
             return null;
         } catch (ParseException pe) {
-            System.err.println("Couldn't parse returned data as json:" + pe.getPosition());
+            Logger.getLogger(WikiCategory.class.getName()).log(Level.SEVERE, null, pe);
             return null;
         } finally {
             if (con != null) {
                 con.disconnect();
             }
-            
+
         }
 
     }
